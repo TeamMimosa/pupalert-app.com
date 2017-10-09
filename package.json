@@ -1,6 +1,6 @@
 {
-  "name": "polymer-starter-kit",
-  "license": "BSD-3-Clause",
+  "name": "pupalert-app.com",
+  "license": "MIT",
   "devDependencies": {
     "eslint": "^3.19.0",
     "eslint-config-google": "^0.7.0",
@@ -9,7 +9,14 @@
   "scripts": {
     "lint": "npm run lint:javascript && polymer lint",
     "lint:javascript": "eslint . --ext js,html --ignore-path .gitignore",
-    "test": "polymer test",
-    "test:integration": "polymer build # test that psk builds without error with the CLI"
+    "test": "echo set up some tests"
+  },
+  "version": "1.0.0",
+  "description": "The social media network for finding dogs.",
+  "main": "index.html",
+  "repository": "https://github.com/TeamMimosa/pupalert-app.com.git",
+  "author": "Avritt Rohwer <avrohwer@gmail.com>",
+  "dependencies": {
+    "@webcomponents/webcomponentsjs": "^1.0.14"
   }
 }
