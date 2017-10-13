@@ -129,14 +129,20 @@
       }
 
       _handlePosInPath(path, lat, long) {
+        // handle this better plz lol
         let posArr = !path ? [] : path.split(/\/|,/)  // split on / or ,
 
         if (posArr[1] && posArr[2]) {
-          this.latitude = posArr[1]
-          this.longitude = posArr[2]
+          this.latitude = posArr[1].split('_').join('.')
+          this.longitude = posArr[2].split('_').join('.')
         }
 
-        this.set('subroute.path', `${this.latitude},${this.longitude}/`)        
+        // every time the pos is changed, re-write the path to reflect.
+        // '.' in the path wasn't working so I changed it to _ and it works  ¯\_(ツ)_/¯
+        let pathLat = this.latitude.toString().split('.').join('_')
+        let pathLong = this.longitude.toString().split('.').join('_')
+
+        this.set('subroute.path', `${pathLat},${pathLong}`)        
       }
     }
 
