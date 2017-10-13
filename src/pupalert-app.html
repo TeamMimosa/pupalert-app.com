@@ -1,0 +1,145 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+
+<!-- app layout elements -->
+<link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
+<link rel="import" href="../bower_components/iron-pages/iron-pages.html">
+
+<!-- app routing -->
+<link rel="import" href="../bower_components/app-route/app-location.html">
+<link rel="import" href="../bower_components/app-route/app-route.html">
+
+<!-- icons and buttons -->
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="../bower_components/iron-icons/social-icons.html">
+<link rel="import" href="../bower_components/iron-icons/image-icons.html">
+
+<!-- google map -->
+<link rel="import" href="../bower_components/google-map/google-map.html">
+
+<dom-module id="pupalert-app">
+  <template>
+    <style>
+      :host {
+        margin: 0;
+        display: grid;
+
+      }
+      app-toolbar {
+        background-color: white;
+        color: #555555;
+        justify-content: space-around;
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+      }
+      google-map {
+        height: 100vh;
+        width: 100%;
+      }
+    </style>
+
+    <!-- binds to the app's url -->
+    <app-location route="{{route}}"></app-location>
+
+    <!-- manages top-level routes -->
+    <app-route
+      route="{{route}}"
+      pattern="/:view"
+      data="{{routeData}}"
+      tail="{{subroute}}"
+    ></app-route>
+
+    <!-- manages which route to display -->
+    <iron-pages
+      selected="[[routeData.view]]"
+      attr-for-selected="name"
+    >
+      <google-map
+        name="map"
+        disable-default-ui
+        api-key="AIzaSyBlkjDPZDLLDqbUvidvTpV0T8Pjknl5Tbk"
+        latitude={{latitude}}
+        longitude={{longitude}}
+      ></google-map>
+
+      <!-- <list-view
+        name="list"
+      ></list-view>
+
+      <add-view
+        name="add"
+      ></add-view> -->
+    </iron-pages>
+
+    <!-- bottom toolbar -->
+    <app-toolbar>
+      <paper-icon-button icon="maps:map" title="Map"></paper-icon-button>
+      <paper-icon-button icon="view-list" title="List"></paper-icon-button>
+      <paper-icon-button icon="maps:add-location" title="Camera"></paper-icon-button>
+      <paper-icon-button icon="social:person" title="Profile"></paper-icon-button>
+    </app-toolbar>
+  </template>
+
+  <script>
+    class PupalertApp extends Polymer.Element {
+      static get is() { return 'pupalert-app' }
+
+      static get properties() {
+        return {
+          latitude: {
+            type: Number,
+            notify: true,
+            value: 0
+          },
+          longitude: {
+            type: Number,
+            notify: true,
+            value: 0
+          }
+        }
+      }
+
+      static get observers() {
+        return [
+          '_handleView(routeData.view)',
+          '_handlePosInPath(subroute.path, latitude, longitude)'
+        ]
+      }
+
+      ready() {
+        super.ready()
+
+        // set pos to geolocation if supported
+        if (navigator.geolocation && this.latitude === 0 && this.longitude === 0) {
+          navigator.geolocation.getCurrentPosition((pos) => {
+            this.latitude = pos.coords.latitude
+            this.longitude = pos.coords.longitude
+          })
+        }
+      }
+
+      _handleView(view) {
+        if (!view) {
+          this.set('routeData.view', 'map')  // set default view to map
+        }
+      }
+
+      _handlePosInPath(path, lat, long) {
+        let posArr = !path ? [] : path.split(/\/|,/)  // split on / or ,
+
+        if (posArr[1] && posArr[2]) {
+          this.latitude = posArr[1]
+          this.longitude = posArr[2]
+        }
+
+        this.set('subroute.path', `${this.latitude},${this.longitude}/`)        
+      }
+    }
+
+    customElements.define(PupalertApp.is, PupalertApp)
+  </script>
+</dom-module>
