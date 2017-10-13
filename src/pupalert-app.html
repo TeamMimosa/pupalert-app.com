@@ -24,21 +24,29 @@
     <style>
       :host {
         margin: 0;
-        display: grid;
-
+        height: 100vh;
+        width: 100vw;
       }
       app-toolbar {
         background-color: white;
         color: #555555;
         justify-content: space-around;
         position: fixed;
+        bottom: 0;
         left: 0;
         right: 0;
-        bottom: 0;
       }
       google-map {
-        height: 100vh;
+        height: 100%;
         width: 100%;
+      }
+      iron-pages {
+        height: 100vh;
+        width: 100vw;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
       }
     </style>
 
@@ -66,21 +74,18 @@
         longitude={{longitude}}
       ></google-map>
 
-      <!-- <list-view
-        name="list"
-      ></list-view>
+      <div name="list">I'm list view!</div>
+      <div name="add">I'm add view!</div>
+      <div name="profile">I'm profile view!</div>
 
-      <add-view
-        name="add"
-      ></add-view> -->
     </iron-pages>
 
     <!-- bottom toolbar -->
     <app-toolbar>
-      <paper-icon-button icon="maps:map" title="Map"></paper-icon-button>
-      <paper-icon-button icon="view-list" title="List"></paper-icon-button>
-      <paper-icon-button icon="maps:add-location" title="Camera"></paper-icon-button>
-      <paper-icon-button icon="social:person" title="Profile"></paper-icon-button>
+      <a href="/map" tabindex="-1"><paper-icon-button icon="maps:map" title="Map"></paper-icon-button></a>
+      <a href="/list" tabindex="-1"><paper-icon-button icon="view-list" title="List"></paper-icon-button></a>
+      <a href="/add" tabindex="-1"><paper-icon-button icon="maps:add-location" title="Camera"></paper-icon-button></a>
+      <a href="/profile" tabindex="-1"><paper-icon-button icon="social:person" title="Profile"></paper-icon-button></a>
     </app-toolbar>
   </template>
 
@@ -114,7 +119,7 @@
         super.ready()
 
         // set pos to geolocation if supported
-        if (navigator.geolocation && this.latitude === 0 && this.longitude === 0) {
+        if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition((pos) => {
             this.latitude = pos.coords.latitude
             this.longitude = pos.coords.longitude
