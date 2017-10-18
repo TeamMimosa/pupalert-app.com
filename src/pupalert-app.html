@@ -26,6 +26,7 @@
 
 <!-- custom view components -->
 <link rel="import" href="./add-view.html">
+<link rel="import" href="./detail-view.html">
 
 <dom-module id="pupalert-app">
   <template>
@@ -99,7 +100,10 @@
         lng="[[lng]]"
       ></add-view>
       <div name="profile">I'm profile view!</div>
-      <div name="detail">detail view</div>
+      <detail-view
+        name="detail"
+        postid="[[subroute.path]]"
+      ></detail-view>
     </iron-pages>
 
     <!-- bottom toolbar -->
