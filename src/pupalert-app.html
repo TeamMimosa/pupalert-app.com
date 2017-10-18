@@ -4,6 +4,10 @@
 <link rel="import" href="../bower_components/app-layout/app-toolbar/app-toolbar.html">
 <link rel="import" href="../bower_components/iron-pages/iron-pages.html">
 
+<!-- google maps -->
+<link rel="import" href="../bower_components/google-map/google-map.html">
+<link rel="import" href="../bower_components/google-map/google-map-marker.html">
+
 <!-- app routing -->
 <link rel="import" href="../bower_components/app-route/app-location.html">
 <link rel="import" href="../bower_components/app-route/app-route.html">
@@ -16,8 +20,12 @@
 <link rel="import" href="../bower_components/iron-icons/social-icons.html">
 <link rel="import" href="../bower_components/iron-icons/image-icons.html">
 
-<!-- google map -->
-<link rel="import" href="../bower_components/google-map/google-map.html">
+<!-- firebase -->
+<script src="../bower_components/firebase/firebase.js"></script>
+<script src="../bower_components/geofire/dist/geofire.min.js"></script>
+
+<!-- custom view components -->
+<link rel="import" href="./add-view.html">
 
 <dom-module id="pupalert-app">
   <template>
@@ -36,10 +44,6 @@
         left: 0;
         right: 0;
       }
-      google-map {
-        height: 100%;
-        width: 100%;
-      }
       iron-pages {
         height: 100vh;
         width: 100vw;
@@ -56,28 +60,46 @@
     <!-- manages top-level routes -->
     <app-route
       route="{{route}}"
-      pattern="/:view"
+      pattern="/:page"
       data="{{routeData}}"
       tail="{{subroute}}"
     ></app-route>
 
     <!-- manages which route to display -->
     <iron-pages
-      selected="[[routeData.view]]"
+      selected="[[routeData.page]]"
       attr-for-selected="name"
     >
       <google-map
         name="map"
         disable-default-ui
         api-key="AIzaSyBlkjDPZDLLDqbUvidvTpV0T8Pjknl5Tbk"
-        latitude={{latitude}}
-        longitude={{longitude}}
-      ></google-map>
+        latitude="{{lat}}"
+        longitude="{{lng}}"
+        zoom="{{mapZoom}}"
+      >
+        <template
+          is="dom-repeat"
+          items="[[points]]"
+        >
+          <google-map-marker
+            latitude="[[item.lat]]"
+            longitude="[[item.lng]]"
+            click-events
+            on-google-map-marker-click="_toggleInfoWindow"
+            id="[[item.id]]"
+          ></google-map-marker>
+        </template>
+      </google-map>
 
-      <div name="list">I'm list view!</div>
-      <div name="add">I'm add view!</div>
+      <div name="list">list</div>
+      <add-view
+        name="add"
+        lat="[[lat]]"
+        lng="[[lng]]"
+      ></add-view>
       <div name="profile">I'm profile view!</div>
-
+      <div name="detail">detail view</div>
     </iron-pages>
 
     <!-- bottom toolbar -->
@@ -95,59 +117,53 @@
 
       static get properties() {
         return {
-          latitude: {
-            type: Number,
-            notify: true,
-            value: 0
-          },
-          longitude: {
-            type: Number,
-            notify: true,
-            value: 0
+          lat: Number,
+          lng: Number,
+          mapZoom: Number,
+          points: {
+            type: Array,
+            value: []
           }
         }
       }
 
       static get observers() {
         return [
-          '_handleView(routeData.view)',
-          '_handlePosInPath(subroute.path, latitude, longitude)'
+          '_mapChanged(lat, lng, mapZoom)'
         ]
       }
 
-      ready() {
-        super.ready()
+      constructor() {
+        super()
 
-        // set pos to geolocation if supported
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition((pos) => {
-            this.latitude = pos.coords.latitude
-            this.longitude = pos.coords.longitude
+        // init firebase
+        firebase.initializeApp({
+          apiKey: 'AIzaSyAwCPLC9IY8bZilAE-R7Qot_cLGg4Addoo',
+          databaseURL: 'https://pupalert-f3b79.firebaseio.com/',
+          storageBucket: 'gs://pupalert-f3b79.appspot.com/'
+        })
+        // create a new geofire instance
+        this.geoFire = new GeoFire(firebase.database().ref('geofire'))
+      }
+
+      _mapChanged(lat, lng, mapZoom) {
+        if (this.route.path === '/map' || this.route.path === '/list') {
+          let geoQuery = this.geoFire.query({
+            center: [lat, lng],
+            // FIX vvv
+            radius: Math.pow(14 - mapZoom, 2) * 1.60934 // km, magic formula from http://jeffjason.com/2011/12/google-maps-radius-to-zoom/
+          }).on('key_entered', (key, location, distance) => {
+            this.push('points', {
+              lat: location[0],
+              lng: location[1],
+              id: key
+            })
           })
         }
       }
 
-      _handleView(view) {
-        if (!view) {
-          this.set('routeData.view', 'map')  // set default view to map
-        }
-      }
-
-      _handlePosInPath(path, lat, long) {
-        // handle this better plz lol
-        let posArr = !path ? [] : path.split(/\/|,/)  // split on / or ,
-
-        if (posArr[1] && posArr[2]) {
-          this.latitude = posArr[1].split('_').join('.')
-          this.longitude = posArr[2].split('_').join('.')
-        }
-
-        // every time the pos is changed, re-write the path to reflect.
-        // '.' in the path wasn't working so I changed it to _ and it works  ¯\_(ツ)_/¯
-        let pathLat = this.latitude.toString().split('.').join('_')
-        let pathLong = this.longitude.toString().split('.').join('_')
-
-        this.set('subroute.path', `${pathLat},${pathLong}`)        
+      _toggleInfoWindow(e) {
+        this.set('route.path', `/detail/${e.target.id}`)
       }
     }
 

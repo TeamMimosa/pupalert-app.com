@@ -10,7 +10,11 @@
     "app-layout": "PolymerElements/app-layout#^2.0.2",
     "iron-icons": "PolymerElements/iron-icons#^2.0.1",
     "google-map": "GoogleWebComponents/google-map#^2.0.2",
-    "iron-pages": "PolymerElements/iron-pages#^2.0.0"
+    "iron-pages": "PolymerElements/iron-pages#^2.0.0",
+    "polymerfire": "firebase/polymerfire#^2.2.1",
+    "geofire": "^4.1.2",
+    "paper-button": "PolymerElements/paper-button#^2.0.0",
+    "paper-input": "PolymerElements/paper-input#^2.0.2"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",
