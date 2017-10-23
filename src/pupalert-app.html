@@ -152,17 +152,41 @@
 
       _mapChanged(lat, lng, mapZoom) {
         if (this.route.path === '/map' || this.route.path === '/list') {
-          let geoQuery = this.geoFire.query({
-            center: [lat, lng],
-            // FIX vvv
-            radius: Math.pow(14 - mapZoom, 2) * 1.60934 // km, magic formula from http://jeffjason.com/2011/12/google-maps-radius-to-zoom/
-          }).on('key_entered', (key, location, distance) => {
-            this.push('points', {
-              lat: location[0],
-              lng: location[1],
-              id: key
+          const visibleRadius = (40000 / Math.pow(mapZoom, 2)) * 2  // https://stackoverflow.com/a/46764320/5796112
+          
+          let distance = 0
+          // great circle distance between searchCenter and current pos. see https://stackoverflow.com/a/21623256/5796112
+          if (this.searchCenter) {
+            const piOver2 = Math.PI / 2
+            const R = 6371  // radius of earth, km
+
+            const deltaLat = (this.searchCenter[0] - this.lat) * piOver2
+            const deltaLng = (this.searchCenter[1] - this.lng) * piOver2
+
+            const a = 0.5 - Math.cos(deltaLat) / 2 + 
+                  Math.cos(this.lat * piOver2) * Math.cos(this.searchCenter[0] * piOver2) * 
+                  (1 - Math.cos(deltaLng)) / 2
+                
+            distance = R * 2 * Math.asin(Math.sqrt(a))
+          }
+
+          if (!this.searchRadius || (visibleRadius + distance) > this.searchRadius) {
+            console.log('new query')
+            
+            this.searchRadius = 7 * visibleRadius
+            this.searchCenter = [this.lat, this.lng]
+
+            const geoQuery = this.geoFire.query({
+              center: [lat, lng],
+              radius: this.searchRadius
+            }).on('key_entered', (key, location, distance) => {
+              this.push('points', {
+                lat: location[0],
+                lng: location[1],
+                id: key
+              })
             })
-          })
+          }
         }
       }
 
