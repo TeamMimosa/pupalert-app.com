@@ -14,7 +14,8 @@
     "polymerfire": "firebase/polymerfire#^2.2.1",
     "geofire": "^4.1.2",
     "paper-button": "PolymerElements/paper-button#^2.0.0",
-    "paper-input": "PolymerElements/paper-input#^2.0.2"
+    "paper-input": "PolymerElements/paper-input#^2.0.2",
+    "paper-card": "PolymerElements/paper-card#^2.0.0"
   },
   "devDependencies": {
     "web-component-tester": "Polymer/web-component-tester#^6.0.0",
