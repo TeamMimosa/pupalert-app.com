@@ -1,0 +1,59 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/google-map/google-map.html">
+
+<dom-module id="map-view">
+  <template>
+    <google-map
+      disable-default-ui
+      api-key="AIzaSyBlkjDPZDLLDqbUvidvTpV0T8Pjknl5Tbk"
+      latitude="{{lat}}"
+      longitude="{{lng}}"
+      zoom="{{zoom}}"
+    >
+    <template
+      is="dom-repeat"
+      items="[[points]]"
+    >
+      <google-map-marker
+        latitude="[[item.lat]]"
+        longitude="[[item.lng]]"
+        click-events
+        on-google-map-marker-click="_onMarkerClick"
+        id="[[item.uid]]"
+      ></google-map-marker>
+    </template>
+  </google-map>
+  </template>
+  <script>
+    // MapView manages the google maps element
+    class MapView extends Polymer.Element {
+      static get is() { return 'map-view' }
+
+      static get properties() {
+        return {
+          points: {
+            type: Array,
+            value: [],
+          },
+          lat: {
+            type: Number,
+            notify: true,
+          },
+          lng: {
+            type: Number,
+            notify: true,
+          },
+          zoom: {
+            type: Number,
+            notify: true,
+          },
+        }
+      }
+
+      _onMarkerClick(e) {
+        this.dispatchEvent(new CustomEvent('nav-detail', {detail: {key: e.target.id}}))
+      }
+    }
+    customElements.define(MapView.is, MapView);
+  </script>
+</dom-module>

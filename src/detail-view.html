@@ -1,6 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-storage-script.html">
+<link rel="import" href="./data-query.html">
 
 <dom-module id="detail-view">
   <template>
@@ -20,56 +19,28 @@
       }
     </style>
 
-    <firebase-query
-      path="/posts[[postid]]"
-      data="{{queryData}}"
-    ></firebase-query>
-
-    <h3>Posted By: [[parsedData.postedBy]]</h3>
-
-    <img src="[[picture]]">
+    <data-query
+      uid="[[uid]]"
+      picurl="{{picURL}}"
+      posted-by="{{postedBy}}"
+      time-stamp="{{timeStamp}}"
+    ></data-query>
+  
+    <p>Posted by [[postedBy]] on [[timeStamp]]</p>
+    <img src="[[picURL]]">
   </template>
 
   <script>
+    // DetailView displays the information of one post
     class DetailView extends Polymer.Element {
       static get is() { return 'detail-view'}
 
-      static get observers() {
-        return [
-          '_parseData(queryData)'
-        ]
-      }
-
       static get properties() {
         return {
-          postid: Object,
-          picture: {
-            type: Object,
-            value: '../images/pup.jpg'
-          },
-          parsedData: {
-            type: Object,
-            notify: true,
-            value: {}
-          }
-        }
-      }
-
-      _parseData(data) {
-        if (data.length > 0 && this.postid) {
-          this.set('parsedData.postedBy', data[0].$val)
-          this.set('parsedData.timestamp', data[1].$val)
-
-          // get image
-          firebase.storage().ref('posts')
-            .child(this.postid)
-            .getDownloadURL()
-            .then(url => this.picture = url)
-            .catch(this.picture = '../images/pup.jpg')
+          uid: String,
         }
       }
     }
-
     customElements.define(DetailView.is, DetailView)
   </script>
 </dom-module>

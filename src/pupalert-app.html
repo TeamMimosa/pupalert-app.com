@@ -28,6 +28,9 @@
 <!-- custom view components -->
 <link rel="import" href="./add-view.html">
 <link rel="import" href="./detail-view.html">
+<link rel="import" href="./map-view.html">
+<link rel="import" href="./list-view.html">
+<link rel="import" href="./profile-view.html">
 
 <dom-module id="pupalert-app">
   <template>
@@ -54,16 +57,6 @@
         color: inherit;
         text-decoration: none;
       }
-      list-container {
-        display: flex; 
-        flex-direction: column-reverse;
-      }
-      paper-card {
-        margin: 10px auto;
-        padding: 10px;
-        width: 95%;
-        display: block;
-      }
     </style>
 
     <!-- binds to the app's url -->
@@ -82,54 +75,30 @@
       selected="[[routeData.page]]"
       attr-for-selected="name"
     >
-      <google-map
-        name="map"
-        disable-default-ui
-        api-key="AIzaSyBlkjDPZDLLDqbUvidvTpV0T8Pjknl5Tbk"
-        latitude="{{lat}}"
-        longitude="{{lng}}"
-        zoom="{{mapZoom}}"
-      >
-        <template
-          is="dom-repeat"
-          items="[[points]]"
-        >
-          <google-map-marker
-            latitude="[[item.lat]]"
-            longitude="[[item.lng]]"
-            click-events
-            on-google-map-marker-click="_toggleInfoWindow"
-            id="[[item.id]]"
-          ></google-map-marker>
-        </template>
-      </google-map>
-
-      <div
-        id="list-container"
+      <map-view
+        id="map"
+        name="map",
+        points="[[points]]"
+        lat={{lat}}
+        lng={{lng}}
+        zoom={{mapZoom}}
+      ></map-view>
+      <list-view 
         name="list"
-      >
-        <template
-          name="list"
-          is="dom-repeat"
-          items="[[points]]"
-        >
-          <paper-card>
-            <detail-view
-              postid="/[[item.id]]"
-            ></detail-view>
-          </paper-card>
-        </template>
-      </div>
-      
+        points="[[points]]"
+      ></list-view>
       <add-view
         name="add"
         lat="[[lat]]"
         lng="[[lng]]"
       ></add-view>
-      <div name="profile">I'm profile view!</div>
+      <profile-view
+        name="profile"
+        logged-in="{{loggedIn}}"
+      ></profile-view>
       <detail-view
         name="detail"
-        postid="[[subroute.path]]"
+        uid="[[subroute.path]]"
       ></detail-view>
     </iron-pages>
 
@@ -143,6 +112,7 @@
   </template>
 
   <script>
+    // PupalertApp is the parent component of pupalert
     class PupalertApp extends Polymer.Element {
       static get is() { return 'pupalert-app' }
 
@@ -154,7 +124,7 @@
           points: {
             type: Array,
             value: []
-          }
+          },
         }
       }
 
@@ -162,6 +132,17 @@
         return [
           '_mapChanged(lat, lng, mapZoom)'
         ]
+      }
+
+      connectedCallback() {
+        super.connectedCallback()
+
+        if (this.$) {
+          this.$.map.addEventListener('nav-detail', e => {
+            console.log(e)
+            this.set('route.path', `/detail/${e.detail.key}`)
+          })
+        }
       }
 
       constructor() {
@@ -177,6 +158,7 @@
         this.geoFire = new GeoFire(firebase.database().ref('geofire'))
       }
 
+      // _mapChanged handles the geofire queries and map caching
       _mapChanged(lat, lng, mapZoom) {
         if (this.route.path === '/map' || this.route.path === '/list') {
           const visibleRadius = (40000 / Math.pow(mapZoom, 2)) * 2  // https://stackoverflow.com/a/46764320/5796112
@@ -190,9 +172,7 @@
             const deltaLat = (this.searchCenter[0] - this.lat) * piOver2
             const deltaLng = (this.searchCenter[1] - this.lng) * piOver2
 
-            const a = 0.5 - Math.cos(deltaLat) / 2 + 
-                  Math.cos(this.lat * piOver2) * Math.cos(this.searchCenter[0] * piOver2) * 
-                  (1 - Math.cos(deltaLng)) / 2
+            const a = 0.5 - Math.cos(deltaLat) / 2 + Math.cos(this.lat * piOver2) * Math.cos(this.searchCenter[0] * piOver2) * (1 - Math.cos(deltaLng)) / 2
                 
             distance = R * 2 * Math.asin(Math.sqrt(a))
           }
@@ -209,18 +189,13 @@
               this.push('points', {
                 lat: location[0],
                 lng: location[1],
-                id: key
+                uid: key
               })
             })
           }
         }
       }
-
-      _toggleInfoWindow(e) {
-        this.set('route.path', `/detail/${e.target.id}`)
-      }
     }
-
     customElements.define(PupalertApp.is, PupalertApp)
   </script>
 </dom-module>

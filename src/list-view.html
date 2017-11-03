@@ -1,0 +1,36 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="./detail-view.html">
+
+<dom-module id="list-view">
+  <template>
+    <div id="card-container"></div>  
+  </template>
+  <script>
+    // ListView displays a list view of the found posts
+    class ListView extends Polymer.Element {
+      static get is() { return 'list-view' }
+
+      static get observers() {
+        return [
+          '_populateContainer(points)'
+        ]
+      }
+
+      static get properties() {
+        return {
+          points: {
+            type: Array,
+            value: [],
+          },
+        }
+      }
+
+      _populateContainer(points) {
+        console.log(points.toString())
+      }
+    }
+    customElements.define(ListView.is, ListView);
+  </script>
+</dom-module>

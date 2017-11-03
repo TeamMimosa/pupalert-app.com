@@ -1,0 +1,60 @@
+<link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-storage-script.html">
+
+<dom-module id="data-query">
+  <template>
+    <firebase-query
+      path="/posts[[uid]]"
+      data="{{queryData}}"
+    ></firebase-query>
+  </template>
+  <script>
+      // DataQuery is a wrapper around firebase-query that exposes details about the post
+      class DataQuery extends Polymer.Element {
+        static get is() { return 'data-query' }
+    
+        static get observers() {
+            return [
+              '_parseData(queryData)'
+            ]
+        }
+    
+        static get properties() {
+          return {
+            uid: String,
+            picurl: {
+              type: Object,
+              value: '../images/pup.jpg',
+              notify: true,
+            },
+            postedBy: {
+              type: String,
+              notify: true,
+            },
+            timeStamp: {
+              type: String,
+              notify: true,
+            },
+          }
+        }
+    
+        // _parseData will parse the raw data from firebase and update properties as necissary.
+        _parseData(data) {
+          if (data.length > 0 && this.uid) {
+            this.postedBy = data[0].$val
+            this.timeStamp = data[1].$val
+    
+            firebase.storage().ref('posts')
+              .child(this.uid)
+              .getDownloadURL()
+              .then(url => {
+                this.picurl = url
+              })
+              .catch(err => console.error(err))
+          }
+        }
+      }
+      customElements.define(DataQuery.is, DataQuery)
+    </script>
+</dom-module>
