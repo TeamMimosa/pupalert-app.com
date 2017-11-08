@@ -242,14 +242,20 @@
                 // waits for both queries to finish before adding to posts
                 Promise.all([postDetailsPromise, picDetailsPromise])
                   .then(([postDetails, picDetails]) => {
-                    this.push('points', {
-                      lat: location[0],
-                      lng: location[1],
-                      postedBy: postDetails.postedBy,
-                      timestamp: postDetails.timestamp,
-                      picURL: picDetails.url,
-                      uid: key,
-                    })
+                    const currentTime = new Date()
+                    const postTime = new Date(postDetails.timestamp)
+                    
+                    // only care about points that were posted within the hour
+                    if (currentTime - postTime < 60 * 60 * 1000) {
+                      this.push('points', {
+                        lat: location[0],
+                        lng: location[1],
+                        postedBy: postDetails.postedBy,
+                        timestamp: postDetails.timestamp,
+                        picURL: picDetails.url,
+                        uid: key,
+                      })
+                    }
                   })
               })
           }

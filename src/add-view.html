@@ -1,5 +1,6 @@
 <link rel="import" href="../bower_components/polymer/polymer-element.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
 
 <dom-module id="add-view">
@@ -44,6 +45,11 @@
       raised
       on-click="_handleSubmit"
     >Add</paper-button>
+
+    <paper-toast
+      id="notification"
+      text="Post added."
+    ></paper-toast>
   </template>
   <script>
     class AddView extends Polymer.Element {
@@ -70,9 +76,11 @@
         this.picture = URL.createObjectURL(this.$.userPic.files[0])
       }
 
-      _handleSubmit() {
+      async _handleSubmit() {
         // make a new post, upload to /posts
-        let post = firebase.database().ref('posts').push()
+        const post = await firebase.database().ref('posts').push()
+
+        // set post data
         post.set({
           timestamp: (new Date()).toString(),
           postedBy: 'avritt-test'
@@ -84,9 +92,11 @@
 
         // upload photo to storage if one is supplied
         if (this.picture != '../images/pup.jpg') {
-          let ref = firebase.storage().ref('posts').child(post.key)
-          ref.put(this.$.userPic.files[0])
-             .then(() => console.log('pic uploaded'))
+          firebase.storage().ref('posts').child(post.key)
+            .put(this.$.userPic.files[0])
+            .then(() => {
+              this.$.notification.open()
+            })
         }
       }
     }
