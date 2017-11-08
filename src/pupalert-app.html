@@ -85,6 +85,8 @@
       ></map-view>
       <list-view 
         name="list"
+        lat=[[lat]]
+        lng=[[lng]]
         points="[[points]]"
       ></list-view>
       <add-view
@@ -139,7 +141,6 @@
 
         if (this.$) {
           this.$.map.addEventListener('nav-detail', e => {
-            console.log(e)
             this.set('route.path', `/detail/${e.detail.key}`)
           })
         }
@@ -154,8 +155,12 @@
           databaseURL: 'https://pupalert-f3b79.firebaseio.com/',
           storageBucket: 'gs://pupalert-f3b79.appspot.com/'
         })
-        // create a new geofire instance
+
+        // create a geofire instance
         this.geoFire = new GeoFire(firebase.database().ref('geofire'))
+        
+        // create a reference to storage bucket
+        this.storageRef = firebase.storage().ref('posts')
       }
 
       // _mapChanged handles the geofire queries and map caching
@@ -182,15 +187,32 @@
             this.searchCenter = [this.lat, this.lng]
 
             this.points = []
+            let postedBy, timestamp, picURL
             const geoQuery = this.geoFire.query({
               center: [lat, lng],
               radius: this.searchRadius
             }).on('key_entered', (key, location, distance) => {
-              this.push('points', {
-                lat: location[0],
-                lng: location[1],
-                uid: key
+              // grab 
+              Promise.all([
+                firebase.database().ref(`/posts/${key}`).once('value')
+                  .then(snapshot => {
+                    postedBy = snapshot.val().postedBy
+                    timestamp = snapshot.val().timestamp
+                  }),
+                this.storageRef.child(key)
+                  .getDownloadURL()
+                  .then(url => { picURL = url })
+              ]).then(_ => {
+                this.push('points', {
+                  lat,
+                  lng,
+                  postedBy,
+                  timestamp,
+                  picURL,
+                  uid: key,
+                })
               })
+              console.log(this.points)
             })
           }
         }

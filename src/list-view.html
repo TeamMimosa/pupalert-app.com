@@ -1,22 +1,41 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
-<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
-<link rel="import" href="./detail-view.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 
 <dom-module id="list-view">
   <template>
-    <div id="card-container"></div>  
+    <style>
+      :host {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        background-color: #eee;
+      }
+      paper-card {
+        margin: 7px auto;
+        width: 95%;
+        height: 400px;
+      }
+      img {
+        width: 100%;
+        height: 90%;
+        object-fit: cover;
+      }
+    </style>
+    <template
+      is="dom-repeat"
+      items="[[points]]"  
+    >
+      <paper-card>
+        <img src="[[item.picURL]]">
+        <p>[[item.postedBy]]</p>
+      </paper-card>
+    </template>
   </template>
   <script>
     // ListView displays a list view of the found posts
     class ListView extends Polymer.Element {
       static get is() { return 'list-view' }
-
-      static get observers() {
-        return [
-          '_populateContainer(points)'
-        ]
-      }
 
       static get properties() {
         return {
@@ -24,11 +43,13 @@
             type: Array,
             value: [],
           },
+          lat: Number,
+          lng: Number,
         }
       }
 
-      _populateContainer(points) {
-        console.log(points.toString())
+      _getLocation(lat, lng) {
+        
       }
     }
     customElements.define(ListView.is, ListView);
