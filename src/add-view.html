@@ -85,19 +85,20 @@
           timestamp: (new Date()).toString(),
           postedBy: 'avritt-test'
         })
-        
-        // upload point to geoFire
-        this.geoFire.set(post.key, [this.lat, this.lng])
-          .then(() => console.log('added to geofire'))
 
         // upload photo to storage if one is supplied
         if (this.picture != '../images/pup.jpg') {
-          firebase.storage().ref('posts').child(post.key)
+          await firebase.storage().ref('posts')
+            .child(post.key)
             .put(this.$.userPic.files[0])
             .then(() => {
               this.$.notification.open()
             })
         }
+
+        // upload point to geoFire
+        this.geoFire.set(post.key, [this.lat, this.lng])
+          .then(() => console.log('added to geofire'))
       }
     }
 

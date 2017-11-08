@@ -223,6 +223,7 @@
               radius: this.searchRadius
             })
               .on('key_entered', (key, location, distance) => {  // runs everytime geofire returns a point
+                console.log('point found')
                 // get post details
                 const postDetailsPromise = firebase.database().ref(`/posts/${key}`).once('value')
                   .then(snapshot => {
@@ -244,7 +245,7 @@
                   .then(([postDetails, picDetails]) => {
                     const currentTime = new Date()
                     const postTime = new Date(postDetails.timestamp)
-                    
+
                     // only care about points that were posted within the hour
                     if (currentTime - postTime < 60 * 60 * 1000) {
                       this.push('points', {
