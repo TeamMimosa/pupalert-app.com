@@ -1,6 +1,5 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/google-map/google-map.html">
-<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
 <dom-module id="map-view">
   <template>
@@ -24,11 +23,6 @@
       ></google-map-marker>
     </template>
   </google-map>
-
-  <paper-toast
-    id="notification"
-    text="Cannot get your current location."
-  ></paper-toast>
   </template>
   <script>
     // MapView manages the google maps element
@@ -54,25 +48,6 @@
             notify: true,
           },
         }
-      }
-
-      // set up geolocation
-      connectedCallback() {
-        super.connectedCallback()
-
-        if (navigator.geolocation) {
-          navigator.geolocation.getCurrentPosition(pos => this._updatePos(pos))
-          navigator.geolocation.watchPosition(pos => this._updatePos(pos))
-        } else {
-          // show toast notification
-          this.$.notification.open()
-        }
-      }
-
-      // _updatePos updates the lat and lng properties of the map
-      _updatePos(pos) {
-        this.lat = pos.coords.latitude
-        this.lng = pos.coords.longitude
       }
 
       // _onMarkerClick sends an event that a marker has been clicked

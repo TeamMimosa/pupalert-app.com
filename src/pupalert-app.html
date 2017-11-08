@@ -25,6 +25,9 @@
 <script src="../bower_components/firebase/firebase.js"></script>
 <script src="../bower_components/geofire/dist/geofire.min.js"></script>
 
+<!-- toast notification -->
+<link rel="import" href="../bower_components/paper-toast/paper-toast.html">
+
 <!-- custom view components -->
 <link rel="import" href="./add-view.html">
 <link rel="import" href="./detail-view.html">
@@ -111,6 +114,11 @@
       <a href="/add" tabindex="-1"><paper-icon-button icon="maps:add-location" title="Camera"></paper-icon-button></a>
       <a href="/profile" tabindex="-1"><paper-icon-button icon="social:person" title="Profile"></paper-icon-button></a>
     </app-toolbar>
+
+    <paper-toast
+      id="notification"
+      text="Cannot get your current location."
+    ></paper-toast>
   </template>
 
   <script>
@@ -139,6 +147,22 @@
       connectedCallback() {
         super.connectedCallback()
 
+        // set up geolocation
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            pos => this._updatePos(pos),
+            err => this.$.notification.open()
+          )
+          navigator.geolocation.watchPosition(
+            pos => this._updatePos(pos),
+            err => this.$.notification.open()
+          )
+        } else {
+          // show toast notification
+          this.$.notification.open()
+        }
+
+        // listen for redirect event from map-view
         if (this.$) {
           this.$.map.addEventListener('nav-detail', e => {
             this.set('route.path', `/detail/${e.detail.key}`)
@@ -163,6 +187,12 @@
         this.storageRef = firebase.storage().ref('posts')
       }
 
+      // _updatePos updates the lat and lng properties of the map
+      _updatePos(pos) {
+        this.lat = pos.coords.latitude
+        this.lng = pos.coords.longitude
+      }
+
       // _mapChanged handles the geofire queries and map caching
       _mapChanged(lat, lng, mapZoom) {
         if (this.route.path === '/map' || this.route.path === '/list') {
@@ -183,37 +213,45 @@
           }
 
           if (!this.searchRadius || (visibleRadius + distance) > this.searchRadius) {
-            this.searchRadius = 7 * visibleRadius
+            this.searchRadius = 7 * visibleRadius  // somewhat arbitrary number, feels good tho
             this.searchCenter = [this.lat, this.lng]
 
-            this.points = []
-            let postedBy, timestamp, picURL
+            this.points = []  // clear poinst
+            // search geofire for points
             const geoQuery = this.geoFire.query({
               center: [lat, lng],
               radius: this.searchRadius
-            }).on('key_entered', (key, location, distance) => {
-              // grab 
-              Promise.all([
-                firebase.database().ref(`/posts/${key}`).once('value')
-                  .then(snapshot => {
-                    postedBy = snapshot.val().postedBy
-                    timestamp = snapshot.val().timestamp
-                  }),
-                this.storageRef.child(key)
-                  .getDownloadURL()
-                  .then(url => { picURL = url })
-              ]).then(_ => {
-                this.push('points', {
-                  lat,
-                  lng,
-                  postedBy,
-                  timestamp,
-                  picURL,
-                  uid: key,
-                })
-              })
-              console.log(this.points)
             })
+              .on('key_entered', (key, location, distance) => {  // runs everytime geofire returns a point
+                // get post details
+                const postDetailsPromise = firebase.database().ref(`/posts/${key}`).once('value')
+                  .then(snapshot => {
+                    return {
+                      postedBy: snapshot.val().postedBy,
+                      timestamp: snapshot.val().timestamp,
+                    }
+                  })
+                
+                // get download url
+                const picDetailsPromise = this.storageRef.child(key)
+                  .getDownloadURL()
+                  .then(url => { 
+                    return  { url } 
+                  })
+
+                // waits for both queries to finish before adding to posts
+                Promise.all([postDetailsPromise, picDetailsPromise])
+                  .then(([postDetails, picDetails]) => {
+                    this.push('points', {
+                      lat: location[0],
+                      lng: location[1],
+                      postedBy: postDetails.postedBy,
+                      timestamp: postDetails.timestamp,
+                      picURL: picDetails.url,
+                      uid: key,
+                    })
+                  })
+              })
           }
         }
       }
