@@ -42,19 +42,28 @@
         margin: 0;
         height: 100vh;
         width: 100vw;
+        display: grid;
+        grid-template-rows: 9fr 1fr;
+      }
+      app-location {
+        display: none;
+      }
+      app-route {
+        display: none;
       }
       app-toolbar {
         background-color: white;
         color: #555555;
         justify-content: space-around;
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
       }
       iron-pages {
-        height: 100vh;
-        width: 100vw;
+        height: 90vh;
+        width: 100%;
+      }
+      list-view {
+        height: 100%;
+        display: block;
+        overflow-y: scroll;
       }
       a {
         color: inherit;
@@ -96,10 +105,11 @@
         name="add"
         lat="[[lat]]"
         lng="[[lng]]"
+        user="[[user]]"
       ></add-view>
       <profile-view
         name="profile"
-        logged-in="{{loggedIn}}"
+        user="{{user}}"
       ></profile-view>
       <detail-view
         name="detail"
@@ -116,8 +126,7 @@
     </app-toolbar>
 
     <paper-toast
-      id="notification"
-      text="Cannot get your current location."
+      id="errmsg"
     ></paper-toast>
   </template>
 
@@ -128,8 +137,14 @@
 
       static get properties() {
         return {
-          lat: Number,
-          lng: Number,
+          lat: {
+            type: Number,
+            value: null,
+          },
+          lng: {
+            type: Number,
+            value: null,
+          },
           mapZoom: Number,
           points: {
             type: Array,
@@ -151,15 +166,17 @@
         if (navigator.geolocation) {
           navigator.geolocation.getCurrentPosition(
             pos => this._updatePos(pos),
-            err => this.$.notification.open()
+            err => {
+              this.$.errmsg.text = 'Could not get current position.'
+              this.$.errmsg.open()
+            }
           )
           navigator.geolocation.watchPosition(
             pos => this._updatePos(pos),
-            err => this.$.notification.open()
+            err => {
+              console.info('Can not react to physical location changes.')
+            }
           )
-        } else {
-          // show toast notification
-          this.$.notification.open()
         }
 
         // listen for redirect event from map-view
@@ -177,7 +194,8 @@
         firebase.initializeApp({
           apiKey: 'AIzaSyAwCPLC9IY8bZilAE-R7Qot_cLGg4Addoo',
           databaseURL: 'https://pupalert-f3b79.firebaseio.com/',
-          storageBucket: 'gs://pupalert-f3b79.appspot.com/'
+          storageBucket: 'gs://pupalert-f3b79.appspot.com/',
+          authDomain: 'pupalert-f3b79.firebaseapp.com',
         })
 
         // create a geofire instance
@@ -212,20 +230,23 @@
             distance = R * 2 * Math.asin(Math.sqrt(a))
           }
 
-          if (!this.searchRadius || (visibleRadius + distance) > this.searchRadius) {
+          // make sure lat, lng are defined, searchRadius 
+          if (this.lat && this.lng && (!this.searchRadius || (visibleRadius + distance) > this.searchRadius)) {
             this.searchRadius = 7 * visibleRadius  // somewhat arbitrary number, feels good tho
             this.searchCenter = [this.lat, this.lng]
 
-            this.points = []  // clear poinst
+            this.set('points', [])  // clear points
+            this.addedKeys = []  // need to keep track of what point's I've added b/c bugs
+
             // search geofire for points
             const geoQuery = this.geoFire.query({
               center: [lat, lng],
               radius: this.searchRadius
             })
               .on('key_entered', (key, location, distance) => {  // runs everytime geofire returns a point
-                console.log('point found')
                 // get post details
-                const postDetailsPromise = firebase.database().ref(`/posts/${key}`).once('value')
+                const postDetailsPromise = firebase.database().ref(`/posts/${key}`)
+                  .once('value')
                   .then(snapshot => {
                     return {
                       postedBy: snapshot.val().postedBy,
@@ -239,6 +260,9 @@
                   .then(url => { 
                     return  { url } 
                   })
+                  .catch(err => {
+                    return { url: '../images/pup.jpg'}
+                  })
 
                 // waits for both queries to finish before adding to posts
                 Promise.all([postDetailsPromise, picDetailsPromise])
@@ -247,7 +271,8 @@
                     const postTime = new Date(postDetails.timestamp)
 
                     // only care about points that were posted within the hour
-                    if (currentTime - postTime < 60 * 60 * 1000) {
+                    if (!this.addedKeys.includes(key)){//currentTime - postTime < 60 * 60 * 1000) { DEV PURPOSES
+                      this.addedKeys.push(key)
                       this.push('points', {
                         lat: location[0],
                         lng: location[1],

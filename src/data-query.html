@@ -40,18 +40,26 @@
         }
     
         // _parseData will parse the raw data from firebase and update properties as necissary.
-        _parseData(data) {
+        async _parseData(data) {
           if (data.length > 0 && this.uid) {
-            this.postedBy = data[0].$val
+            // get user details
+            firebase.database().ref(`users/${data[0].$val}`)
+              .once('value')
+              .then(snapshot => {
+                this.postedBy = snapshot.val().name
+              })
+              
             this.timeStamp = data[1].$val
     
             firebase.storage().ref('posts')
               .child(this.uid)
               .getDownloadURL()
-              .then(url => {
-                this.picurl = url
-              })
-              .catch(err => console.error(err))
+              .then(
+                url => {
+                  this.picurl = url
+                },
+                err => { }  // use default picture 
+              )
           }
         }
       }

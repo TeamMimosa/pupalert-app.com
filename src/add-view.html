@@ -15,7 +15,21 @@
         align-items: center;
       }
       input {
-        display: block;
+        width: 0px;
+        height: 0px;
+        overflow: hidden;
+      }
+      input + label {
+        display: inline-block;
+        cursor: pointer;
+        background-color: indigo;
+        color: white;
+        padding: 1em;
+        border-radius: 4px;
+        text-transform: uppercase;
+      }
+      input:focus + label {
+        outline: 2px solid royalblue;
       }
       img {
         height: 200px;
@@ -37,9 +51,10 @@
       capture
       on-change="_displayPic"
     >
+    <label for="userPic">Take picture</label>
 
     <img src="[[picture]]">
-    <p>[[lat]], [[lng]]</p>
+    <p>[[user.displayName]]</p>
 
     <paper-button
       raised
@@ -47,8 +62,12 @@
     >Add</paper-button>
 
     <paper-toast
-      id="notification"
+      id="postAdded"
       text="Post added."
+    ></paper-toast>
+    <paper-toast
+      id="noUser"
+      text="You must sign in to post."
     ></paper-toast>
   </template>
   <script>
@@ -62,7 +81,8 @@
             value: '../images/pup.jpg'
           },
           lat: Object,
-          lng: Object
+          lng: Object,
+          user: Object,
         }
       }
 
@@ -83,7 +103,7 @@
         // set post data
         post.set({
           timestamp: (new Date()).toString(),
-          postedBy: 'avritt-test'
+          postedBy: this.user.uid
         })
 
         // upload photo to storage if one is supplied
@@ -92,13 +112,13 @@
             .child(post.key)
             .put(this.$.userPic.files[0])
             .then(() => {
-              this.$.notification.open()
+              this.$.postAdded.open()
             })
         }
 
         // upload point to geoFire
         this.geoFire.set(post.key, [this.lat, this.lng])
-          .then(() => console.log('added to geofire'))
+          .then(() => this.$.postAdded.open())
       }
     }
 

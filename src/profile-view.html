@@ -1,8 +1,44 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
+<link rel="import" href="../bower_components/paper-button/paper-button.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
 
 <dom-module id="profile-view">
   <template>
-    I'm profile view.
+    <style>
+      :host {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-around;
+        align-items: center;
+      }
+      img {
+        height: 200px;
+        width: 200px;
+        border-radius: 100%;
+        background-color: royalblue;
+      }
+    </style>
+
+    <firebase-auth
+      id="auth"
+      user="{{user}}"
+      provider="google"
+      on-error="_handleSignInError"
+    ></firebase-auth>
+
+    <template
+      is="dom-if"
+      if="[[user]]"
+    >
+      <img src="[[user.photoURL]]">
+      <p>[[user.displayName]]</p>
+    </template>
+
+    <paper-button
+      raised
+      on-click="_signIn"
+    >Sign in</paper-button>
   </template>
   <script>
     class ProfileView extends Polymer.Element {
@@ -10,8 +46,34 @@
 
       static get properties() {
         return {
-          loggedIn: Boolean,
+          user: {
+            type: Object,
+            notify: true,
+          },
         }
+      }
+
+      _signIn() {
+        this.$.auth.signInWithPopup()
+          .then(res => {
+            this.notifyPath('user.photoURL')
+            this.notifyPath('user.displayName')
+
+            if (res.additionalUserInfo.isNewUser) {
+              // add user to database
+              firebase.database().ref('users')
+                .child(res.user.uid)
+                .set({
+                  name: res.user.displayName,
+                  total_posts: 0
+                })
+            }
+          })
+          .catch(err => console.log(err))
+      }
+
+      _handleSignInError() {
+        console.log('an error has occurred')
       }
     }
     customElements.define(ProfileView.is, ProfileView);

@@ -1,20 +1,22 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
-<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
 
 <dom-module id="list-view">
   <template>
     <style>
       :host {
+        width: 100%;
         display: flex;
         flex-direction: column;
         justify-content: center;
         background-color: #eee;
       }
       paper-card {
+        display: block;
         margin: 7px auto;
         width: 95%;
         height: 400px;
+        overflow: hidden;
       }
       img {
         width: 100%;
@@ -24,7 +26,7 @@
     </style>
     <template
       is="dom-repeat"
-      items="[[points]]"  
+      items="[[points]]"
     >
       <paper-card>
         <img src="[[item.picURL]]">
