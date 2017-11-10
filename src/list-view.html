@@ -9,7 +9,6 @@
         display: flex;
         flex-direction: column;
         justify-content: center;
-        background-color: #eee;
       }
       paper-card {
         display: block;
@@ -30,7 +29,7 @@
     >
       <paper-card>
         <img src="[[item.picURL]]">
-        <p>[[item.postedBy]]</p>
+        <p>[[_getLocation(item.lat, item.lng)]]</p>
       </paper-card>
     </template>
   </template>
@@ -44,14 +43,17 @@
           points: {
             type: Array,
             value: [],
+            observer: '_getPointDetails'
           },
           lat: Number,
           lng: Number,
         }
       }
 
-      _getLocation(lat, lng) {
-        
+      _getPointDetails(e) {
+        const fuckNamingStuff = []
+        console.log(e[0])
+
       }
     }
     customElements.define(ListView.is, ListView);

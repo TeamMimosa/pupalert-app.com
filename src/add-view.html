@@ -2,6 +2,13 @@
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/paper-toast/paper-toast.html">
 
+<link rel="import" href="../bower_components/paper-icon-button/paper-icon-button.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/image-icons.html">
+
+<link rel="import" href="./get-location.html">
+
 
 <dom-module id="add-view">
   <template>
@@ -20,29 +27,40 @@
         overflow: hidden;
       }
       input + label {
-        display: inline-block;
         cursor: pointer;
-        background-color: indigo;
-        color: white;
         padding: 1em;
+        color: #8a8a8a;
+        border: 5px solid #ffcf6fff;
         border-radius: 4px;
         text-transform: uppercase;
       }
       input:focus + label {
         outline: 2px solid royalblue;
       }
-      img {
+      paper-icon-button {
         height: 200px;
         width: 200px;
         border-radius: 4px;
       }
+      img {
+        height: 200px;
+        width: 200px;
+        border-radius: 4px;
+        display: none;
+      }
       paper-button {
         display: block;
-        background-color: indigo;
+        background-color: #ffcf6fff;
         color: white;
         text-align: center;
       }
     </style>
+
+    <get-location
+      lat="[[lat]]"
+      lng="[[lng]]"
+      city="{{city}}"
+    ></get-location>
 
     <input
       id="userPic"
@@ -51,23 +69,26 @@
       capture
       on-change="_displayPic"
     >
-    <label for="userPic">Take picture</label>
-
-    <img src="[[picture]]">
-    <p>[[user.displayName]]</p>
+    <label for="userPic">
+      <paper-icon-button id="addIcon" icon="image:add-a-photo"></paper-icon-button>
+     
+      <img id="doggoImg" src="[[picture]]">
+    </label>
+    
+    <p>[[city]]</p>
 
     <paper-button
       raised
       on-click="_handleSubmit"
-    >Add</paper-button>
+    >Post</paper-button>
 
     <paper-toast
       id="postAdded"
       text="Post added."
     ></paper-toast>
     <paper-toast
-      id="noUser"
-      text="You must sign in to post."
+      id="errorPost"
+      text="You must sign in and take a picture to post."
     ></paper-toast>
   </template>
   <script>
@@ -76,10 +97,7 @@
 
       static get properties() {
         return {
-          picture: {
-            type: Object,
-            value: '../images/pup.jpg'
-          },
+          picture: Object,
           lat: Object,
           lng: Object,
           user: Object,
@@ -94,9 +112,16 @@
 
       _displayPic() {
         this.picture = URL.createObjectURL(this.$.userPic.files[0])
+        this.$.addIcon.style.display = 'none'
+        this.$.doggoImg.style.display = 'block'
       }
 
       async _handleSubmit() {
+        if (!this.picture || !this.user) {
+          this.$.errorPost.open()
+          return
+        }
+
         // make a new post, upload to /posts
         const post = await firebase.database().ref('posts').push()
 
@@ -107,14 +132,12 @@
         })
 
         // upload photo to storage if one is supplied
-        if (this.picture != '../images/pup.jpg') {
-          await firebase.storage().ref('posts')
-            .child(post.key)
-            .put(this.$.userPic.files[0])
-            .then(() => {
-              this.$.postAdded.open()
-            })
-        }
+        await firebase.storage().ref('posts')
+          .child(post.key)
+          .put(this.$.userPic.files[0])
+          .then(() => {
+            this.$.postAdded.open()
+          })
 
         // upload point to geoFire
         this.geoFire.set(post.key, [this.lat, this.lng])

@@ -1,0 +1,49 @@
+<link rel="import" href="../bower_components/polymer/polymer-element.html">
+<link rel="import" href="../bower_components/iron-ajax/iron-ajax.html">
+
+<dom-module id="get-location">
+  <template>
+    <iron-ajax
+      auto
+      url="[[url]]"
+      handle-as="json"
+      on-response="_handleResponse"
+    ></iron-ajax>
+  </template>
+
+  <script>
+    class GetLocation extends Polymer.Element {
+      static get is() { return 'get-location' }
+
+      static get observers() {
+        return [
+          '_sendReq(lat, lng)'
+        ]
+      }
+
+      static get properties() {
+        return {
+          lat: Number,
+          lng: Number,
+          city: {
+            type: String,
+            notify: true,
+          },
+          url: String
+        }
+      }
+
+      _sendReq(lat, lng) {
+        if (this.lat && this.lng) {
+          this.url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${this.lat},${this.lng}&key=AIzaSyAv0PzV-CErk7F-ZfBIUsjKc5qVBlO49hc`
+        }
+      }
+
+      _handleResponse(data) {
+        this.city = `${data.detail.response.results[0].address_components[2].long_name}, ${data.detail.response.results[0].address_components[4].long_name}`
+      }
+    }
+
+    customElements.define(GetLocation.is, GetLocation)
+  </script>
+</dom-module>
