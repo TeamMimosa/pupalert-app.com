@@ -139,9 +139,17 @@
             this.$.postAdded.open()
           })
 
-        // upload point to geoFire
+        // increment user's total posts
+        firebase.database().ref(`users/${this.user.uid}/total_posts`)
+          .transaction(posts => posts + 1)
+
+        // upload point to geoFire, open toast notification once done
         this.geoFire.set(post.key, [this.lat, this.lng])
           .then(() => this.$.postAdded.open())
+
+        // clear picture
+        this.$.doggoImg.style.display = 'none'
+        this.$.addIcon.style.display = 'block'
       }
     }
 

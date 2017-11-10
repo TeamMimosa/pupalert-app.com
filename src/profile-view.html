@@ -1,6 +1,7 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-button/paper-button.html">
 <link rel="import" href="../bower_components/polymerfire/firebase-auth.html">
+<link rel="import" href="../bower_components/polymerfire/firebase-query.html">
 
 <dom-module id="profile-view">
   <template>
@@ -18,6 +19,10 @@
         border-radius: 100%;
         background-color: royalblue;
       }
+      paper-button {
+        display: inline-block;
+        background-color: #ffcf6fff;
+      }
     </style>
 
     <firebase-auth
@@ -33,23 +38,46 @@
     >
       <img src="[[user.photoURL]]">
       <p>[[user.displayName]]</p>
+      <p>Total posts: [[totalPosts]]</p>
     </template>
 
-    <paper-button
+    <div id="buttons">
+      <paper-button
       raised
-      on-click="_signIn"
-    >Sign in</paper-button>
+      on-click="_signIn">
+        Sign in
+      </paper-button>
+  
+      <paper-button
+        raised
+        on-click="_signOut">
+        Sign out
+      </paper-button>
+    </div>
+    
   </template>
   <script>
     class ProfileView extends Polymer.Element {
       static get is() { return 'profile-view' }
-
+  
       static get properties() {
         return {
           user: {
             type: Object,
             notify: true,
+            observer: '_handleTotalPosts'
           },
+          totalPosts: Number
+        }
+      }
+
+      _handleTotalPosts(user) {
+        if (user) {
+          // attach listner for total posts
+          firebase.database().ref(`/users/${user.uid}`)
+            .on('value', snapshot => {
+              this.totalPosts = snapshot.val().total_posts
+            })
         }
       }
 
@@ -70,6 +98,12 @@
             }
           })
           .catch(err => console.log(err))
+      }
+
+      _signOut() {
+        this.$.auth.signOut()
+        this.notifyPath('user.photoURL')
+        this.notifyPath('user.displayName')
       }
 
       _handleSignInError() {
