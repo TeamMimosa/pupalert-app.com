@@ -40,7 +40,12 @@
       }
 
       _handleResponse(data) {
-        this.city = `${data.detail.response.results[0].address_components[2].long_name}, ${data.detail.response.results[0].address_components[4].long_name}`
+        const results = data.detail.response.results[0]
+        if (results.address_components[2] && results.address_components[4]) {
+          this.city = `${results.address_components[2].long_name}, ${results.address_components[4].long_name}`
+         } else {
+           this.city = results.formatted_address
+         }
       }
     }
 
