@@ -272,7 +272,7 @@
                     const postTime = new Date(postDetails.timestamp)
 
                     // only care about points that were posted within the hour
-                    if (!this.addedKeys.includes(key)){//currentTime - postTime < 60 * 60 * 1000) { DEV PURPOSES
+                    if (!this.addedKeys.includes(key) && currentTime - postTime < 60 * 60 * 1000) {
                       this.addedKeys.push(key)
                       this.push('points', {
                         lat: location[0],
