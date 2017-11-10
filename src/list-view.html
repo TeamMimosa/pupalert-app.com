@@ -1,5 +1,9 @@
 <link rel="import" href="../bower_components/polymer/polymer.html">
 <link rel="import" href="../bower_components/paper-card/paper-card.html">
+<link rel="import" href="../bower_components/iron-icon/iron-icon.html">
+<link rel="import" href="../bower_components/iron-icons/iron-icons.html">
+<link rel="import" href="../bower_components/iron-icons/maps-icons.html">
+<link rel="import" href="./get-location.html">
 
 <dom-module id="list-view">
   <template>
@@ -14,23 +18,50 @@
         display: block;
         margin: 7px auto;
         width: 95%;
-        height: 400px;
+        height: 300px;
         overflow: hidden;
+        display: flex;
+        flex-direction: column;
       }
       img {
         width: 100%;
-        height: 90%;
+        height: 80%;
         object-fit: cover;
+      }
+      #city-container {
+        margin-top: 1em; 
+        margin-left: 1em;
+      }
+      iron-icon {
+        display: inline-block;
+        height: 1.5em;
+        width: 1.5em;
+        color: #ffcf6fff;
+      }
+      a {
+        color: inherit;
+        text-decoration: none;
       }
     </style>
     <template
       is="dom-repeat"
       items="[[points]]"
     >
-      <paper-card>
-        <img src="[[item.picURL]]">
-        <p>[[_getLocation(item.lat, item.lng)]]</p>
-      </paper-card>
+      <get-location
+        lat="[[item.lat]]"
+        lng="[[item.lng]]"
+        city="{{item.city}}"
+      ></get-location>
+
+      <a href="/detail/[[item.uid]]">
+        <paper-card>
+          <img src="[[item.picURL]]">
+          <div id="city-container">
+            <iron-icon icon="maps:place"></iron-icon>
+            [[item.city]]
+          </div>
+        </paper-card>
+      </a>
     </template>
   </template>
   <script>
@@ -43,17 +74,10 @@
           points: {
             type: Array,
             value: [],
-            observer: '_getPointDetails'
           },
           lat: Number,
           lng: Number,
         }
-      }
-
-      _getPointDetails(e) {
-        const fuckNamingStuff = []
-        console.log(e[0])
-
       }
     }
     customElements.define(ListView.is, ListView);
