@@ -156,7 +156,8 @@
 
       static get observers() {
         return [
-          '_mapChanged(lat, lng, mapZoom)'
+          '_mapChanged(lat, lng, mapZoom)',
+          '_checkRoute(route)'
         ]
       }
 
@@ -210,6 +211,12 @@
       _updatePos(pos) {
         this.lat = pos.coords.latitude
         this.lng = pos.coords.longitude
+      }
+
+      _checkRoute(route) {
+        if (route.path === '/') {
+          this.set('route.path', '/map')
+        }
       }
 
       // _mapChanged handles the geofire queries and map caching
