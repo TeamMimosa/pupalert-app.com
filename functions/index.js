@@ -4,6 +4,7 @@ const admin = require('firebase-admin')
 admin.initializeApp(functions.config().firebase)
 
 const dbRef = admin.database().ref()
+const storageRef = admin.storage().bucket()
 
 exports.cleanPosts = functions.https.onRequest((req, res) => {
   const oldPosts = []
@@ -27,6 +28,8 @@ exports.cleanPosts = functions.https.onRequest((req, res) => {
     oldPosts.forEach(post => {
       dbRef.child(`geofire/${post}`).remove()
       dbRef.child(`posts/${post}`).remove()
+      storageRef.file(`posts/${post}`).delete()
+
     })
   })
 })
