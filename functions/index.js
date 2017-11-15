@@ -29,7 +29,8 @@ exports.cleanPosts = functions.https.onRequest((req, res) => {
       dbRef.child(`geofire/${post}`).remove()
       dbRef.child(`posts/${post}`).remove()
       storageRef.file(`posts/${post}`).delete()
-
     })
+
+    res.send('Posts deleted: ' + oldPosts.join())
   })
 })
