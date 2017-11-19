@@ -140,7 +140,7 @@
           postedBy: this.user.uid
         })
 
-        // upload photo to storage if one is supplied
+        // upload photo to storage
         await firebase.storage().ref('posts')
           .child(post.key)
           .put(this.$.userPic.files[0])
@@ -159,6 +159,7 @@
         // clear picture
         this.$.doggoImg.style.display = 'none'
         this.$.addIcon.style.display = 'block'
+        this.picture = null
       }
     }
 
